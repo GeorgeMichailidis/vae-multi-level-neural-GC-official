@@ -98,15 +98,23 @@ To cite this work:
 ```
 @article{Lin2024VAE,
     title = {A VAE-based Framework for Learning Multi-Level Neural Granger-Causal Connectivity},
-    author = {Jiahe Lin, Huitian Lei and George Michailidis},
+    author = {Lin, Jiahe and Lei, Huitian and Michailidis, George},
     year = {2024},
     journal = {Transactions on Machine Learning Research},
+    issn={2835-8856},
     url = {https://openreview.net/pdf?id=kNCZ95mw7N}
 }
 ```
 
 * For questions on the paper and/or collaborations based on the methods (extensions or applications), contact [George Michailidis](mailto:gmichail@ucla.edu) 
 * For questions on the code implementation, contact [Jiahe Lin](mailto:jiahelin@umich.edu) and/or [Huitian Lei](mailto:ehlei@umich.edu)
+
+## References
+
+We list below the repositories referenced as this codebase was being developed
+
+- Part of the design in `Traj2GraphEncoder` and `Graph2TrajGC*Decoder` referenced the implementation in [NRI-encoder-decoder](https://github.com/ethanfetaya/NRI/blob/master/modules.py)
+- Data generation in synthetic data experiments is modified based on [Lorenz96](https://github.com/iancovert/Neural-GC/blob/master/synthetic.py), [LoktaVolterra](https://github.com/i6092467/GVAR/blob/master/datasets/lotkaVolterra/multiple_lotka_volterra.py) and [Springs5](https://github.com/ethanfetaya/NRI/blob/master/data/synthetic_sim.py)
 
 
 ## Miscellaneous
