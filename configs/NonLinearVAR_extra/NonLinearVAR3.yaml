@@ -1,0 +1,56 @@
+
+DGP:
+  dgp_str: 'OneBanded2VAR'
+  num_nodes: 20
+  num_subjects: 10
+  dispersion: 1
+  sigma_obs: 0.5
+  T_obs: 40000
+  num_train: 36951
+  num_val: 2000
+  num_test: 1000
+  context_length: 50
+  target_length: 0
+  stride: 1
+
+data_params:
+  num_nodes: 20
+  num_subjects: 10
+  context_length: 50
+  graph_type: 'numeric'
+  include_diag: True
+  val_size: 1000
+  test_size: 500
+  graph_key: 'GC'
+
+network_params:
+  model_type: 'simMultiSubVAE'
+  loss_type: 'NLL'
+  encoder_hidden_dim: 128
+  decoder_hidden_dim: 256
+  decoder_tf_interval: 1
+  decoder_fix_trajvar: 0.001
+  do_prob: 0.1
+  MC_samples: 10
+  encoder_weight: 0.50
+  unit_variance: True
+  min_var: 0.01
+  max_var: 100
+  decoder_style: 'GCNode'
+
+train_params:
+  batch_size: 16
+  shuffle: True
+  max_epochs: 25
+  es_patience: null
+  warmup_epochs: null
+  limit_val_batches: 0.5
+  gradient_clip_val: 1
+  run_seed: 606
+
+optimizer:
+  learning_rate: 0.0008
+  scheduler_type: 'StepLR'
+  step_size: 10
+  gamma: 0.25
+  interval: 'epoch'

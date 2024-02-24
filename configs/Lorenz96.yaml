@@ -1,0 +1,59 @@
+
+DGP:
+  dgp_str: 'Lorenz96'
+  num_nodes: 20
+  num_subjects: 5
+  forceLow: 10.0
+  forceHigh: 40.0
+  forceDistribution: 'grid'
+  T_obs: 40000
+  T_delta: 0.05
+  sigma_obs: 0.1
+  num_train: 36981
+  num_val: 2000
+  num_test: 1000
+  context_length: 20
+  target_length: 0
+  stride: 1
+
+data_params:
+  num_nodes: 20
+  num_subjects: 5
+  context_length: 20
+  graph_type: 'numeric'
+  include_diag: True
+  val_size: 1000
+  test_size: 500
+  graph_key: 'GC'
+
+network_params:
+  model_type: 'simMultiSubVAE'
+  loss_type: 'NLL'
+  encoder_hidden_dim: 128
+  decoder_hidden_dim: 128
+  decoder_tf_interval: 1
+  decoder_fix_trajvar: 0.0005
+  do_prob: 0.1
+  MC_samples: 10
+  encoder_weight: 0.75
+  unit_variance: True
+  min_var: 0.01
+  max_var: 100
+  decoder_style: 'GCNode'
+
+train_params:
+  batch_size: 16
+  shuffle: True
+  max_epochs: 30
+  es_patience: null
+  warmup_epochs: 10
+  limit_val_batches: 0.5
+  gradient_clip_val: 0.5
+  run_seed: 606
+
+optimizer:
+  learning_rate: 0.001
+  scheduler_type: 'StepLR'
+  step_size: 15
+  gamma: 0.25
+  interval: 'epoch'

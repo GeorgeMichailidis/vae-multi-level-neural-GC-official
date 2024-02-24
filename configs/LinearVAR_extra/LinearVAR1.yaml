@@ -1,0 +1,63 @@
+
+DGP:
+  dgp_str: 'LinearVAR'
+  num_nodes: 30
+  num_subjects: 20
+  dispersion: 0.1
+  perturb_support: True
+  q_lags: 1
+  sigLow: 1
+  sigHigh: 2
+  sigDecay: 1
+  specr_common: 0.5
+  sparsity_common: 0.30
+  specr_max: 0.95
+  sigma_obs: 1
+  T_obs: 40000
+  num_train: 36971
+  num_val: 2000
+  num_test: 1000
+  context_length: 30
+  target_length: 0
+  stride: 1
+
+data_params:
+  num_nodes: 30
+  num_subjects: 20
+  context_length: 30
+  graph_type: 'numeric'
+  include_diag: True
+  val_size: 1000
+  test_size: 500
+  graph_key: 'A'
+
+network_params:
+  model_type: 'simMultiSubVAE'
+  loss_type: 'NLL'
+  encoder_hidden_dim: 64
+  decoder_hidden_dim: 32
+  decoder_tf_interval: 5
+  decoder_fix_trajvar: 0.0005
+  do_prob: 0.1
+  MC_samples: 10
+  encoder_weight: 0.50
+  unit_variance: True
+  min_var: 0.01
+  max_var: 100
+  decoder_style: 'GCNode'
+
+train_params:
+  batch_size: 16
+  shuffle: True
+  max_epochs: 30
+  es_patience: null
+  warmup_epochs: 10
+  limit_val_batches: 0.5
+  gradient_clip_val: 0.25
+  run_seed: 606
+
+optimizer:
+  learning_rate: 0.001
+  scheduler_type: 'ReduceLROnPlateau'
+  factor: 0.5
+  patience: 10

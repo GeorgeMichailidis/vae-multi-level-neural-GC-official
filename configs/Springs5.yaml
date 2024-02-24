@@ -1,0 +1,62 @@
+
+DGP:
+  dgp_str: 'Springs'
+  num_nodes: 5
+  num_subjects: 10
+  degenerate_beta: False
+  deterministic_graph: True
+  loc_init: 0.5
+  vel_norm: 0.5
+  interaction_strength: 0.1
+  noise_var: 0.02
+  box_size: 5
+  T_obs: 5000
+  sample_freq: 100
+  num_train: 30000
+  num_val: 2000
+  num_test: 1000
+  
+data_params:
+  num_nodes: 5
+  feature_dim: 4
+  num_subjects: 10
+  context_length: 49
+  graph_type: 'binary'
+  include_diag: False
+  val_size: 500
+  test_size: 100
+
+network_params:
+  model_type: 'simMultiSubVAE'
+  loss_type: 'NLL'
+  decoder_style: 'GCNode'
+  encoder_hidden_dim: 256
+  decoder_hidden_dim: 256
+  decoder_fix_trajvar: 0.00005
+  decoder_tf_interval: 5
+  decoder_delta_flag: True
+  decoder_residual_flag: True
+  do_prob: 0.1
+  encoder_weight: 0.50
+  MC_samples: 10
+  min_var: 0.01
+  max_var: 100
+  gumbel_tau: 0.5
+  kl_multiplier: 1.0
+  unit_variance: null
+
+train_params:
+  batch_size: 64
+  shuffle: True
+  max_epochs: 50
+  es_patience: null
+  warmup_epochs: 10
+  limit_val_batches: 0.5
+  gradient_clip_val: 0
+
+optimizer:
+  learning_rate: 0.0008
+  scheduler_type: 'MultiStepLR'
+  milestones: [20,40]
+  gamma: 0.5
+  interval: 'epoch'

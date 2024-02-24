@@ -1,0 +1,45 @@
+
+data_params:
+  num_nodes: 5
+  feature_dim: 4
+  num_subjects: 10
+  context_length: 49
+  graph_type: 'binary'
+  include_diag: False
+  val_size: 500
+  test_size: 100
+
+network_params:
+  model_type: 'simOneSubVAE'
+  loss_type: 'NLL'
+  decoder_style: 'GCNode'
+  encoder_hidden_dim: 256
+  decoder_hidden_dim: 192
+  decoder_fix_trajvar: 0.00005
+  decoder_tf_interval: 5
+  decoder_delta_flag: True
+  decoder_residual_flag: True
+  do_prob: 0.1
+  MC_samples: 10
+  min_var: 0.01
+  max_var: 100
+  gumbel_tau: 0.5
+  sample_hard: False
+  kl_multiplier: 1.0
+  unit_variance: null
+
+train_params:
+  batch_size: 64
+  shuffle: True
+  max_epochs: 30
+  es_patience: null
+  warmup_epochs: 10
+  limit_val_batches: 0.5
+  gradient_clip_val: 0.5
+
+optimizer:
+  learning_rate: 0.0002
+  scheduler_type: 'MultiStepLR'
+  milestones: [5,10,20]
+  gamma: 0.25
+  interval: 'epoch'
