@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class _baseGraph(nn.Module):
+class BaseGraph(nn.Module):
     def __init__(self, num_nodes, include_diag=False):
         
-        super(_baseGraph, self).__init__()
+        super(BaseGraph, self).__init__()
         self.num_nodes = num_nodes
         self.include_diag = include_diag
         

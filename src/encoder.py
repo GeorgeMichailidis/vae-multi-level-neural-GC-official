@@ -1,20 +1,18 @@
 """
-Encoder modules: Traj2Graph GNN-style (Traj2GraphEncoder) encoder + Entity2Common, and the Encoder object that combines the two
+Encoder modules: Traj2Graph GNN-style (Traj2GraphEncoder) encoder + Entity2Common
 Traj2GraphEncoder() is largely taken from https://github.com/ethanfetaya/NRI/blob/master/modules.py
 """
-
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-import numpy as np
-
-from ._basegraph import _baseGraph
+from .basegraph import BaseGraph
 from .modules import MLP
 
 _EPS=1e-4
 
-class Traj2GraphEncoder(_baseGraph):
+class Traj2GraphEncoder(BaseGraph):
     
     def __init__(self, params):
 
@@ -121,10 +119,12 @@ class Entity2CommonEncoder(nn.Module):
             beta = num_subjects - num_subjects * mean + 1
             return alpha, beta
 
-class Encoder(nn.Module):
+
+class LadderEncoder(nn.Module):
 
     def __init__(self, params):
-        super(Encoder, self).__init__()
+        
+        super(LadderEncoder, self).__init__()
         self.traj2graph_net = Traj2GraphEncoder(params)
         self.graph2common_net = Entity2CommonEncoder(params)
         self.graph_type = params['graph_type']

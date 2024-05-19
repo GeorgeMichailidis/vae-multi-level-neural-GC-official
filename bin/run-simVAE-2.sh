@@ -1,4 +1,5 @@
 #!/bin/bash
+trap "EXIT" INT
 
 ds=${1-LinearVAR}
 cuda=${2-0}
@@ -49,20 +50,12 @@ do
             if $run_simMultiSubVAE ; then
                 config="configs/${ds}_extra/${ds_str}${version}.yaml"
                 output_dir="output_sim/${ds}_extra/${ds_str}_seed${seed}-simMultiSubVAE-${train_size}${version}"
-                
                 echo "####################"
                 date
                 CMD="python -u run_sim.py --ds_str=$ds_str --cuda=$cuda --train_size=$train_size --seed=$seed --config=$config --output_dir=$output_dir --eval-test-only"
                 echo "CMD: ${CMD}"
                 echo "####################"
-                
-                if eval ${CMD}
-                then
-                    echo "Done running simMultiSubVAE for ${ds_str} seed ${seed}"
-                else
-                    echo "Some ERROR occurred while running ${CMD}; exit 1"
-                    exit 1
-                fi
+                eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
             fi
             
             ## individual learning
@@ -76,14 +69,7 @@ do
                     CMD="python -u run_simOne.py --ds_str=$ds_str --cuda=$cuda --subject_id=$subject_id --train_size=$train_size --seed=$seed --config=$config --output_dir=$output_dir --eval-test-only"
                     echo "CMD: ${CMD}"
                     echo "####################"
-                    
-                    if eval ${CMD}; then
-                        echo "Done running OneSubVAE for ${ds_str} seed ${seed} subject ${subject_id}"
-                    else
-                        echo "Some ERROR occurred while running ${CMD}; exit 1"
-                        exit 1
-                    fi
-                
+                    eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
                 done
             fi
         

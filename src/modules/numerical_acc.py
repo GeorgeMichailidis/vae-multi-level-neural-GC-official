@@ -5,22 +5,6 @@ import torch.nn.functional as F
 from torchmetrics import PearsonCorrCoef
 from torchmetrics import Metric
 
-def binary_edge_sampler(logits, gumbel_tau, hard):
-    
-    assert logits.ndim == 4
-    assert logits.shape[-1] == 2
-
-    batch_size, num_subjects, num_edges, num_class = logits.shape
-    samples_onehot = F.gumbel_softmax(logits, tau=gumbel_tau, hard=hard)
-    subj_graph = samples_onehot[:,:,:,1].view(batch_size, -1, num_edges)
-    
-    return subj_graph
-
-def my_softmax(input, axis=1):
-    trans_input = input.transpose(axis, 0).contiguous()
-    soft_max_1d = F.softmax(trans_input, dim=0)
-    return soft_max_1d.transpose(axis, 0)
-
 class NumericalAccuracy(Metric):
     
     higher_is_better = True

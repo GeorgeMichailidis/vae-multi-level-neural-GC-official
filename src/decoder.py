@@ -9,12 +9,13 @@ import torch.nn.functional as F
 import numpy as np
 import importlib
 
-from ._basegraph import _baseGraph
+from .basegraph import BaseGraph
 from .modules import MLP, PeriodicEmbedder
+from .sampler import Sampler
 
 _EPS=1e-4
 
-class _baseGraph2TrajGCDecoder(_baseGraph, nn.Module):
+class _baseGraph2TrajGCDecoder(BaseGraph):
     
     def __init__(self, params):
         
@@ -231,37 +232,24 @@ class Common2EntityDecoder(nn.Module):
         else:
             return mu, None
 
-class SimDecoder(nn.Module):
+
+class LadderDecoder(nn.Module):
     
     def __init__(self, params):
-
-        super(SimDecoder, self).__init__()
-
+        super(LadderDecoder, self).__init__()
         self.graph_type = params['graph_type']
         self.num_subjects = params['num_subjects']
         self.encoder_weight = params['encoder_weight']
-        self.decoder_style = params['decoder_style']
-
-        self.gumbel_tau = params.get('gumbel_tau',None)
-        self.sample_hard = params.get('sample_hard',False)
-        self.MC_samples = params.get('MC_samples',1)
-
-        if self.decoder_style == 'GCEdge':
+        if params['decoder_style'] == 'GCEdge':
             self.graph2traj_net = Graph2TrajGCEdgeDecoder(params)
-        elif self.decoder_style == 'GCNode':
+        elif params['decoder_style'] == 'GCNode':
             self.graph2traj_net = Graph2TrajGCNodeDecoder(params)
         else:
             raise ValueError(f'unrecognized decoder_style={self.decoder_style}')
-
         self.common2graph_net = Common2EntityDecoder(params)
-
-    def _bernoulli_sampler(self, p, tau=1., hard=False):
-    
-        p = torch.clamp(p, min=_EPS, max=1-_EPS)
-        logits_class1, logits_class0 = torch.log(p/(1.-p)), torch.log((1.-p)/p)
-        logits = torch.stack([logits_class1, logits_class0],axis=-1)
-        samples_onehot = F.gumbel_softmax(logits, tau=tau, hard=hard)
-        return samples_onehot[:,:,0]
+        self.gumbel_tau = params.get('gumbel_tau',None)
+        self.sample_hard = params.get('sample_hard',False)
+        self.mc_samples = params.get('MC_samples',1)
 
     def _merge_encoder_info(self, mean_q, var_q, mean_p, var_p):
         
@@ -280,34 +268,21 @@ class SimDecoder(nn.Module):
         
         batch_size, num_edges = param1_zbar.shape
 
-        zbar_mc_shape = (self.MC_samples, batch_size, num_edges)
-        zs_mc_shape = (self.MC_samples, batch_size, self.num_subjects, num_edges)
+        if self.graph_type == 'numeric':
+            sampled_zbar = Sampler.sampler_normal(param1_zbar, param2_zbar, self.mc_samples)
+        else:
+            sampled_zbar = Sampler.sampler_beta(param1_zbar, param2_zbar, self.mc_samples)
+            
+        mean_z, var_z = self.common2graph_net(sampled_zbar)
+        mean_zp_adj, var_zp_adj = self._merge_encoder_info(mean_zq, var_zq, mean_z, var_z)
 
         if self.graph_type == 'numeric':
-
-            zbar_mc = param1_zbar + (param2_zbar**0.5)*torch.randn(zbar_mc_shape,device=param1_zbar.device)
-            zbar = torch.mean(zbar_mc, dim=0, keepdim=False)
-
-            mean_z, var_z = self.common2graph_net(zbar)
-            mean_z_adj, var_z_adj = self._merge_encoder_info(mean_zq, var_zq, mean_z, var_z)
-
-            zs_mc = mean_z_adj + (var_z_adj**0.5)*torch.randn(zs_mc_shape, device=mean_z.device)
-            z_by_subject = torch.mean(zs_mc, dim=0, keepdim=False)
-
+            sampled_z_by_subject = Sampler.sampler_normal(mean_zp_adj, var_zp_adj, self.mc_samples)
         else:
+            sampled_z_by_subject = Sampler.sampler_binary_from_probs(mean_zp_adj,
+                                                                gumbel_tau=self.gumbel_tau,
+                                                                hard=self.sample_hard,
+                                                                mc_samples=self.mc_samples)
 
-            param1_zbar_mc = param1_zbar.repeat(self.MC_samples,1,1).view(self.MC_samples * batch_size, -1)
-            param2_zbar_mc = param2_zbar.repeat(self.MC_samples,1,1).view(self.MC_samples * batch_size, -1)
-            zbar_mc = torch.distributions.beta.Beta(param1_zbar_mc, param2_zbar_mc).rsample()
-            zbar = torch.mean(zbar_mc.view(zbar_mc_shape), dim=0, keepdim=False)
-
-            mean_z, var_z = self.common2graph_net(zbar)
-            mean_z_adj, var_z_adj = self._merge_encoder_info(mean_zq, var_zq, mean_z, var_z)
-
-            z_samples = self._bernoulli_sampler(mean_z_adj.repeat(self.MC_samples,1,1,1).view(-1, num_edges), tau=self.gumbel_tau, hard=self.sample_hard)
-            zs_mc = z_samples.view(zs_mc_shape)
-            z_by_subject = torch.mean(zs_mc, dim=0, keepdim=False)
-
-        mu_x, var_x = self.graph2traj_net(data, z_by_subject)
-
-        return mean_z_adj, var_z_adj, mu_x, var_x
+        mu_x, var_x = self.graph2traj_net(data, sampled_z_by_subject)
+        return mean_zp_adj, var_zp_adj, mu_x, var_x

@@ -1,4 +1,5 @@
 #!/bin/bash
+trap "EXIT" INT
 
 ds_str=${1-EEG_EC}
 cuda=${2-0}
@@ -30,7 +31,7 @@ do
         CMD="python -u train.py --ds_str=$ds_str --cuda=$cuda --train_size=$train_size --config=$config --output_dir=$output_dir"
         echo "CMD: ${CMD}"
         echo "####################"
-        eval ${CMD}
+        eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
     fi
     
     ## run one-subject
@@ -43,7 +44,7 @@ do
             CMD="python -u train_one.py --ds_str=$ds_str --cuda=$cuda --subject_id=$subject_id --train_size=$train_size --config=$config --output_dir=$output_dir"
             echo "CMD: ${CMD}"
             echo "####################"
-            eval ${CMD}
+            eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
         done
     fi
     
