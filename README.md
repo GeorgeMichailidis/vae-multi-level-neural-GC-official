@@ -1,6 +1,6 @@
 # A VAE-based Framework for Learning Multi-Level Neural Granger-Causal Connectivity
 
-(Copyright 2024) by **Jiahe Lin**, **Huitian Lei** and **George Michailidis**
+(Copyright 2024) by **Jiahe Lin**, **Huitian Lei** and **George Michailidis**; paper accepted in TMLR, 2024. [[link to paper](https://openreview.net/pdf?id=kNCZ95mw7N)]
 
 ## Environment Setup
 
@@ -10,7 +10,7 @@ conda create -n vae-gc python=3.9
 conda activate vae-gc
 conda install pyyaml numpy pandas scipy scikit-learn
 conda install matplotlib seaborn 
-pip install pytorch-lightning pytorch
+pip install pytorch-lightning torch
 ```
 See also `requirements.txt`.
 
@@ -18,10 +18,6 @@ To verify that your GPU is up and running:
 ```console
 python -c "import torch; print(torch.cuda.is_available())"
 ```
-Some useful links in case GPUs are not configured correctly:
-* https://pytorch.org
-* https://lightning.ai/docs/pytorch/stable//starter/installation.html
-
 
 ## Repo Layout
 
@@ -29,8 +25,9 @@ We outline the major components in this repository for ease of navigation.
 
 * `bin/`: shell scripts for execution; see also section [Experiments in the paper](#Experiments-In-the-Paper)
 * `src/`:
-    - `multiSubVAE.py` and `oneSubVAE.py`: pl.lightning-based modules that encapsulate the pipeline for running VAE-based multi-entity/single-entity methods on a given dataset
-    - `simMultiSubVAE.py` and `simOneSubVAE.py`: pl.lightning-based modules for running VAE-based multi-entity/single-entity methods on synthetic data, where the underlying true GC graphs are _known_. Specifically, dataloader (`torch.utils.data.dataloader.DataLoader` object, see `_simdl.py`) and graph evaluation (through `torchmetrics`) is integrated in every step of training, to facilitate model development and tracking.
+    - `networks.py`: torch-based modules whose forward passes correspond to the proposed methods. Model supported: `OneLayer` and `TwoLayer`, resp. for single and multi-entity VAE-based models.
+    - `models_pl.py`: pl.lightning-based modules that encapsulate the forward-backward propagation pipeline for running VAE-based multi-entity/single-entity methods on a given dataset
+    - `models_pl_sim.py`: similar to the above but specifically for synthetic datasets, where the underlying true GC graphs are _known_. In particular, dataloader and graph evaluation (through `torchmetrics`) is integrated in every step of training, to facilitate model development and tracking.
         * Of note, the printed metrics during training do not correspond to the final metrics presented in the paper (e.g., AUROC and AUPRC). In particular, for the case where graph type is numeric, it calculates a Pearson Correlation-type metric between the truth and the estimates at the individual sample level.
     - `datasets/`: objects with `torch.utils.data.dataset.Dataset` being the base class, to read a specific (type) of dataset from disk so that it can be loaded properly through `DataLoader` later on. 
         * See also the demo in [Run Your Own Datasets](#Run-Your-Own-Datasets) for a concrete example

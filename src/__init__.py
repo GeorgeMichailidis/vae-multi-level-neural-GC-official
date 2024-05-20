@@ -1,6 +1,3 @@
 
-from .simMultiSubVAE import simMultiSubVAE
-from .simOneSubVAE import simOneSubVAE
-
-from .multiSubVAE import MultiSubVAE
-from .oneSubVAE import OneSubVAE
+from .models_pl import MultiSubVAE, OneSubVAE
+from .models_pl_sim import simMultiSubVAE, simOneSubVAE

@@ -1,6 +1,7 @@
 #!/bin/bash
+trap "EXIT" INT
 
-ds_str=${1-Lokta}
+ds_str=${1-Lotka}
 cuda=${2-0}
 version=${3}
 
@@ -61,7 +62,7 @@ do
             CMD="python -u run_sim.py --ds_str=$ds_str --cuda=$cuda --train_size=$train_size --seed=$seed --config=$config --output_dir=$output_dir --eval-test-only"
             echo "CMD: ${CMD}"
             echo "####################"
-            eval ${CMD}
+            eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
         fi
         
         ## run one-subject
@@ -74,7 +75,7 @@ do
                 CMD="python -u run_simOne.py --ds_str=$ds_str --cuda=$cuda --subject_id=$subject_id --train_size=$train_size --seed=$seed --config=$config --output_dir=$output_dir --eval-test-only"
                 echo "CMD: ${CMD}"
                 echo "####################"
-                eval ${CMD}
+                eval ${CMD} || { echo 'some error occurred; exit 1' ; exit 1; }
             done
         fi
         
