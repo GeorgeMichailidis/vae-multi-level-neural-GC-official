@@ -1,4 +1,3 @@
-
-from .simrunner import simRunner
-from .realrunner import realRunner
+from .simrunner import SimDataRunner
+from .realrunner import RealDataRunner
 

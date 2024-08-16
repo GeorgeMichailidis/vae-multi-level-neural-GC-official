@@ -1,43 +1,30 @@
 #!/usr/bin/env python3
-
 """
 Read real data (EEG) and prepare samples in the same format as simulated data
 python process_EEG.py
 or
 python process_EEG.py --ds_str='EEG_EC'
 """
-
+import argparse
+import glob
+import pickle
 import os
 import sys
-sys.path.append(os.getcwd())
 
-import argparse
-import yaml
 import numpy as np
 import pandas as pd
 import shutil
-import pickle
-import datetime
-import importlib
-import glob
-import re
+import yaml
 
 from utils.utils_data import parse_trajectories, seq_to_samples
+from utils import utils_logging
 
-parser = argparse.ArgumentParser(description='')
-parser.add_argument('--ds_str', type=str, help='datasets to process, separated by comma',default='EEG_EC,EEG_EO')
-parser.add_argument('--generate-summary-only', action='store_true', help='only generate summary statistics for raw data')
-parser.add_argument('--verbose', action='store_true')
+logger = utils_logging.get_logger()
 
-def main():
+def main(args):
 
-    global args
-    args = parser.parse_args()
-
-    print(f"python={'.'.join(map(str,sys.version_info[:3]))}")
-    print(f"numpy={np.__version__}")
-    print(f"pandas={pd.__version__}")
-
+    logger.info(f"python={'.'.join(map(str,sys.version_info[:3]))}; numpy={np.__version__}; pandas={pd.__version__}")
+    
     parent_folder = 'data_real' ## just in case there are more data coming in
     raw_data_folder = os.path.join(parent_folder, 'EEG_CSV_files')
 
@@ -47,7 +34,7 @@ def main():
 
         stimuli = ds.split('_')[-1]
         config = f'configs/{ds}.yaml'
-        print(f'##### [{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] PROCESSING {ds}, config_file={config}')
+        logger.info(f'PROCESSING {ds}, config_file={config}')
 
         with open(config) as f:
             params = yaml.safe_load(f)['raw_data_specs']
@@ -56,7 +43,7 @@ def main():
 
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
-            print(f'folder={folder_name} created')
+            logger.info(f'folder={folder_name} created')
 
         ###########
         ## generate data summary
@@ -64,7 +51,7 @@ def main():
         data_summary = generate_summary(raw_data_folder, stimuli)
         path_summary = os.path.join(folder_name, f'{stimuli}_data_summary.csv')
         data_summary.to_csv(path_summary,index=False)
-        print(f'>> summary exported:{path_summary}; min_length={data_summary["T"].min()}, max_length={data_summary["T"].max()}')
+        logger.info(f'summary exported:{path_summary}; min_length={data_summary["T"].min()}, max_length={data_summary["T"].max()}')
 
         if args.generate_summary_only:
             continue
@@ -93,15 +80,15 @@ def main():
         ###########
         ## parse trajectories and prep samples
         ###########
-        print(f'>> preparing sampels based on trajectories')
+        logger.info(f'preparing sampels based on trajectories')
 
         for folder_type in ['train','val','test']:
             folder_name_typed = os.path.join(folder_name, folder_type)
             if not os.path.exists(folder_name_typed):
                 os.mkdir(folder_name_typed)
-                print(f'folder={folder_name_typed} created')
+                logger.info(f'folder={folder_name_typed} created')
             else:
-                print(f'folder={folder_name_typed} existed; emptied and recreated')
+                logger.warning(f'folder={folder_name_typed} existed; emptied and recreated')
                 shutil.rmtree(folder_name_typed)
                 os.mkdir(folder_name_typed)
 
@@ -122,10 +109,11 @@ def main():
             np.save(f'{folder_name}/val/data_{sample_id}.npy', trajs_val[sample_id])
         for sample_id in range(trajs_test.shape[0]):
             np.save(f'{folder_name}/test/data_{sample_id}.npy', trajs_test[sample_id])
-        print(f'>> trajectories saved as {folder_name}/(train,val,test)/data_*.npy')
+        logger.info(f'trajectories saved as {folder_name}/(train,val,test)/data_*.npy')
 
-    print(f"\n{datetime.datetime.now().strftime('%a %b %d %H:%M:%S %Y')}")
+    logger.info("Done execution")
     return 0
+
 
 def generate_summary(data_folder, stimuli):
 
@@ -154,6 +142,7 @@ def generate_summary(data_folder, stimuli):
 
     return df
 
+
 def read_raw_data(data_folder, min_length, stimuli, nodes_list=None):
     """
     Read EEG raw data.
@@ -176,7 +165,7 @@ def read_raw_data(data_folder, min_length, stimuli, nodes_list=None):
         df = pd.read_csv(file)
 
         if df.shape[0] < min_length:
-            print(f'# WARNING: Subject {subject_id} has trajectory of length {df.shape[0]} < minimum required {min_length}')
+            logger.warning(f'subject {subject_id} has trajectory of length {df.shape[0]} < minimum required {min_length}')
             dropped_subjects.append(subject_id)
             continue
 
@@ -195,8 +184,9 @@ def read_raw_data(data_folder, min_length, stimuli, nodes_list=None):
         subject_id_map[order] = subject_id
         order += 1
 
-    print(f'>> effective number of subjects collected={len(data_raw)}; dropped_subjects={dropped_subjects}')
+    logger.info(f'effective number of subjects collected={len(data_raw)}; dropped_subjects={dropped_subjects}')
     return data, subject_id_map
+    
     
 def create_subsample(traj, sample_freq):
     """
@@ -212,5 +202,14 @@ def create_subsample(traj, sample_freq):
     ss_traj = np.mean(ss_traj, axis=-1)
     return ss_traj
     
+    
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser(description='')
+    
+    parser.add_argument('--ds_str', type=str, help='datasets to process, separated by comma',default='EEG_EC,EEG_EO')
+    parser.add_argument('--generate-summary-only', action='store_true', help='only generate summary statistics for raw data')
+    parser.add_argument('--verbose', action='store_true')
+    
+    args = parser.parse_args()
+    main(args)

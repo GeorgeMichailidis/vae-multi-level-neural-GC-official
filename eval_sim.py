@@ -1,25 +1,17 @@
 """
 script for running performance check of an experiment
-python eval_sim.py --ds_str=LinearVAR --data_seed=0
+python eval_sim.py --ds_str=LinearVAR --seed=0
 """
-
+import argparse
+import datetime
+import glob
 import os
 import sys
-import yaml
-import glob
-import datetime
-import argparse
+
 import numpy as np
+import yaml
 
 from utils.utils_eval import *
-
-parser = argparse.ArgumentParser(description='')
-parser.add_argument('--ds_str', type=str, help='dataset for which performance will be checked',default='ds0')
-parser.add_argument('--seed', type=int, help='data seed',default=0)
-parser.add_argument('--logname', type=str, help='overriding evaluation logname; default to None')
-parser.add_argument('--config', type=str, help='overriding config loc; default to None')
-parser.add_argument('--output_loc', type=str, help='overriding location for output; default to None')
-parser.add_argument('--data_loc', type=str, help='overriding location for data; default to None')
 
 #################
 ## usage: to evaluate results from specific folders: add folder name here (but without the output_sim/)
@@ -30,18 +22,11 @@ _METHODS = {
     'simOneSubVAE': [],
 }
 
-def main():
+def main(args):
 
-    global args
-    args = parser.parse_args()
-    
-    if args.data_loc is None:
-        args.data_loc = f'data_sim/{args.ds_str}_seed{args.seed}'
-    if args.output_loc is None:
-        args.output_loc = 'output_sim'
-    
-    if args.config is None:
-        args.config = f'configs/{args.ds_str}.yaml'
+    args.data_loc = args.data_loc or f'data_sim/{args.ds_str}_seed{args.seed}'
+    args.output_loc = args.output_loc or 'output_sim'
+    args.config = args.config or f'configs/{args.ds_str}.yaml'
     with open(args.config) as handle:
         configs = yaml.safe_load(handle)
         
@@ -52,8 +37,7 @@ def main():
     args.metrics = ['acc','f1'] if args.ds_str == 'Springs5' else ['auroc','auprc','f1best']
     
     ## set identifier for this eval
-    if args.logname is None:
-        args.logname = f'{args.ds_str}_{args.seed}_eval'
+    args.logname = args.logname or f'{args.ds_str}_{args.seed}_eval'
     if not os.path.exists('logs'):
         os.mkdir('logs')
         
@@ -106,16 +90,23 @@ def main():
     
     return 0
     
-################################
-##
 ## helper functions for evaluating each individual method
-##
-################################
-
 def eval_simVAE(output_folder, data_loc, config):
     subj_eval, bar_eval = eval_vaeGraphs(output_folder, data_folder=data_loc, config_file=config)
     return subj_eval, bar_eval
 
-## entry point
+
+## main entry point of the script
 if __name__ == '__main__':
-    main()
+
+    parser = argparse.ArgumentParser(description='')
+    
+    parser.add_argument('--ds_str', type=str, help='dataset for which performance will be checked',default='ds0')
+    parser.add_argument('--seed', type=int, help='data seed',default=0)
+    parser.add_argument('--logname', type=str, help='overriding evaluation logname; default to None')
+    parser.add_argument('--config', type=str, help='overriding config loc; default to None')
+    parser.add_argument('--output_loc', type=str, help='overriding location for output; default to None')
+    parser.add_argument('--data_loc', type=str, help='overriding location for data; default to None')
+
+    args = parser.parse_args()
+    main(args)
