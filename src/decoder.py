@@ -2,12 +2,10 @@
 Decoder modules: Common2Entity + Node-centric (Graph2TrajGCNodeDecoder)/Edge-centric (Graph2TrajGCEdgeDecoder) Graph2Traj decoders, and the SimDecoder object that combines the two modules which also includes the sampling step
 The code in Graph2TrajGCEdgeDecoder() referenced and is modified based on https://github.com/ethanfetaya/NRI/blob/master/modules.py
 """
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import importlib
 
 from .basegraph import BaseGraph
 from .modules import MLP, PeriodicEmbedder
