@@ -53,7 +53,7 @@ def main(args):
         ###########
         ## initialize the simulator and generate VAR parameters
         ###########
-        available_simulators = importlib.import_module('generator.simulator')
+        available_simulators = importlib.import_module('generator.simulators')
         simClass = getattr(available_simulators, f'sim{params["dgp_str"]}')
         
         simulator = simClass(params)
